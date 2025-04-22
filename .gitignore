@@ -1,0 +1,17 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.swp
+.DS_Store
+.env
+data/
+*.db
+*.db-shm
+*.db-wal
+TestResults/
+coverage/
+artifacts/
+publish/
