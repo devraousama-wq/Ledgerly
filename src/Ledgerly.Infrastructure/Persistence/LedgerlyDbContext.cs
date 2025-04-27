@@ -1,3 +1,4 @@
+using Ledgerly.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ledgerly.Infrastructure.Persistence;
@@ -8,6 +9,8 @@ public sealed class LedgerlyDbContext : DbContext
         : base(options)
     {
     }
+
+    public DbSet<Account> Accounts => Set<Account>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
