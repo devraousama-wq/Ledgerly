@@ -1,4 +1,6 @@
+using Ledgerly.Application.Abstractions;
 using Ledgerly.Infrastructure.Persistence;
+using Ledgerly.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +17,8 @@ public static class DependencyInjection
 
         services.AddDbContext<LedgerlyDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+        services.AddScoped<IAccountRepository, AccountRepository>();
 
         return services;
     }
