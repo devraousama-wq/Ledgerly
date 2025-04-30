@@ -19,6 +19,7 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<IJournalRepository, JournalRepository>();
 
         return services;
     }
