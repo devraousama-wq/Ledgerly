@@ -14,6 +14,8 @@ public sealed class LedgerlyDbContext : DbContext
 
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
 
+    public DbSet<Contact> Contacts => Set<Contact>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LedgerlyDbContext).Assembly);

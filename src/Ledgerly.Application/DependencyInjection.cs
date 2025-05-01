@@ -1,4 +1,5 @@
 using Ledgerly.Application.Accounts;
+using Ledgerly.Application.Contacts;
 using Ledgerly.Application.Journals;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddScoped<AccountService>();
         services.AddScoped<JournalService>();
+        services.AddScoped<ContactService>();
 
         return services;
     }
