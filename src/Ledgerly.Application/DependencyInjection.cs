@@ -1,18 +1,1 @@
-using Ledgerly.Application.Accounts;
-using Ledgerly.Application.Contacts;
-using Ledgerly.Application.Journals;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Ledgerly.Application;
-
-public static class DependencyInjection
-{
-    public static IServiceCollection AddApplication(this IServiceCollection services)
-    {
-        services.AddScoped<AccountService>();
-        services.AddScoped<JournalService>();
-        services.AddScoped<ContactService>();
-
-        return services;
-    }
-}
+using Ledgerly.Application.Accounts; using Ledgerly.Application.Contacts; using Ledgerly.Application.Invoices; using Ledgerly.Application.Journals; using Microsoft.Extensions.DependencyInjection; namespace Ledgerly.Application; public static class DependencyInjection { public static IServiceCollection AddApplication(this IServiceCollection services){ services.AddScoped<AccountService>(); services.AddScoped<JournalService>(); services.AddScoped<ContactService>(); services.AddScoped<InvoiceService>(); return services; } }
