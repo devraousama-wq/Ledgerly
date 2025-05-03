@@ -1,0 +1,1 @@
+namespace Ledgerly.Application.Invoices; public sealed record CreateInvoiceRequest(Guid OrganizationId,Guid CustomerId,string InvoiceNumber,DateOnly IssueDate,DateOnly DueDate,string Currency,Guid IncomeAccountId,Guid ReceivableAccountId);

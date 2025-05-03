@@ -1,0 +1,1 @@
+using Ledgerly.Domain.Entities; namespace Ledgerly.Application.Abstractions; public interface ITaxCodeRepository { Task<TaxCode?> GetByIdAsync(Guid organizationId,Guid taxCodeId,CancellationToken cancellationToken=default); Task AddAsync(TaxCode taxCode,CancellationToken cancellationToken=default);}
