@@ -1,0 +1,1 @@
+using Ledgerly.Domain.Entities; namespace Ledgerly.Application.Abstractions; public interface IExpenseRepository { Task<Expense?> GetByIdAsync(Guid organizationId,Guid expenseId,CancellationToken cancellationToken=default); Task AddAsync(Expense expense,CancellationToken cancellationToken=default); Task UpdateAsync(Expense expense,CancellationToken cancellationToken=default);}
