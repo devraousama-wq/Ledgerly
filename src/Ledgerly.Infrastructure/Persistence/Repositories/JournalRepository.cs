@@ -36,6 +36,29 @@ public sealed class JournalRepository : IJournalRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>> ListPostedLinesByAccountAsync(
+        Guid organizationId,
+        Guid accountId,
+        DateOnly startDate,
+        DateOnly endDate,
+        CancellationToken cancellationToken = default)
+    {
+        var entries = await _context.JournalEntries
+            .Include(entry => entry.Lines)
+            .Where(entry =>
+                entry.OrganizationId == organizationId &&
+                entry.Status == Domain.Enums.JournalEntryStatus.Posted &&
+                entry.EntryDate >= startDate &&
+                entry.EntryDate <= endDate)
+            .ToListAsync(cancellationToken);
+
+        return entries
+            .SelectMany(entry => entry.Lines
+                .Where(line => line.AccountId == accountId)
+                .Select(line => (entry, line)))
+            .ToList();
+    }
+
     public async Task AddAsync(JournalEntry entry, CancellationToken cancellationToken = default)
     {
         await _context.JournalEntries.AddAsync(entry, cancellationToken);

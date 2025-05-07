@@ -266,6 +266,27 @@ public class JournalServiceTests
             return Task.FromResult(results);
         }
 
+        public Task<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>> ListPostedLinesByAccountAsync(
+            Guid organizationId,
+            Guid accountId,
+            DateOnly startDate,
+            DateOnly endDate,
+            CancellationToken cancellationToken = default)
+        {
+            var lines = _entries
+                .Where(entry =>
+                    entry.OrganizationId == organizationId &&
+                    entry.Status == JournalEntryStatus.Posted &&
+                    entry.EntryDate >= startDate &&
+                    entry.EntryDate <= endDate)
+                .SelectMany(entry => entry.Lines
+                    .Where(line => line.AccountId == accountId)
+                    .Select(line => (entry, line)))
+                .ToList();
+
+            return Task.FromResult<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>>(lines);
+        }
+
         public Task AddAsync(JournalEntry entry, CancellationToken cancellationToken = default)
         {
             _entries.Add(entry);
