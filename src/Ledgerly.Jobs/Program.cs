@@ -6,7 +6,7 @@ var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddHostedService<LedgerlyWorker>();
+builder.Services.AddHostedService<RecurringSchedulePollingService>();
 
 var host = builder.Build();
 host.Run();

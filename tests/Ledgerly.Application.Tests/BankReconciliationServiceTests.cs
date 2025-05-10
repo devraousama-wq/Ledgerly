@@ -135,12 +135,12 @@ public class BankReconciliationServiceTests
             1100m,
             "USD"));
 
-        await service.AddLineAsync(
+        var withLine = await service.AddLineAsync(
             OrganizationId,
             created.Value!.Id,
             new AddBankStatementLineRequest(new DateOnly(2026, 3, 7), 100m, "Deposit", "DEP-1"));
 
-        var lineId = created.Value.Lines.Single().Id;
+        var lineId = withLine.Value!.Lines.Single().Id;
         var result = await service.CreateEntryFromLineAsync(
             OrganizationId,
             created.Value.Id,
