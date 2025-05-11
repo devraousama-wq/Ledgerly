@@ -70,7 +70,7 @@ public class RecurringTransactionProcessorTests
         var template = new RecurringInvoiceTemplate(customer.Id, "REC-INV", "USD", income.Id, receivable.Id, 30, new[] { new RecurringLineTemplate("Service", 1m, 100m, null, 0m) });
         var schedule = new RecurringSchedule(Org, "Monthly", "0 0 1 * *", new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero), RecurringTransactionType.Invoice, JsonSerializer.Serialize(template));
         await recurringRepo.AddAsync(schedule);
-        var journalService = new JournalService(journalRepo, accountRepo);
+        var journalService = new JournalService(journalRepo, accountRepo, new InMemoryFiscalPeriodRepository());
         var invoiceService = new InvoiceService(invoiceRepo, contactRepo, accountRepo, taxRepo, journalService);
         var billService = new BillService(new RecurringTestBillRepository(), contactRepo, accountRepo, taxRepo, journalService);
         var processor = new RecurringTransactionProcessor(recurringRepo, invoiceService, billService, journalService);
@@ -96,7 +96,7 @@ public class RecurringTransactionProcessorTests
         var template = new RecurringJournalTemplate("REC-JE", "Monthly allocation", "USD", new[] { new RecurringJournalLineTemplate(expense.Id, 50m, 0m, null), new RecurringJournalLineTemplate(cash.Id, 0m, 50m, null) });
         var schedule = new RecurringSchedule(Org, "Allocation", "0 0 1 * *", new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero), RecurringTransactionType.Journal, JsonSerializer.Serialize(template));
         await recurringRepo.AddAsync(schedule);
-        var journalService = new JournalService(journalRepo, accountRepo);
+        var journalService = new JournalService(journalRepo, accountRepo, new InMemoryFiscalPeriodRepository());
         var invoiceService = new InvoiceService(new RecurringTestInvoiceRepository(), new RecurringTestContactRepository(), accountRepo, new RecurringTestTaxCodeRepository(), journalService);
         var billService = new BillService(new RecurringTestBillRepository(), new RecurringTestContactRepository(), accountRepo, new RecurringTestTaxCodeRepository(), journalService);
         var processor = new RecurringTransactionProcessor(recurringRepo, invoiceService, billService, journalService);
@@ -125,7 +125,7 @@ public class RecurringTransactionProcessorTests
         var template = new RecurringBillTemplate(vendor.Id, "REC-BILL", "USD", expense.Id, payable.Id, 14, new[] { new RecurringLineTemplate("Supplies", 1m, 75m, null, 0m) });
         var schedule = new RecurringSchedule(Org, "Monthly bill", "0 0 1 * *", new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero), RecurringTransactionType.Bill, JsonSerializer.Serialize(template));
         await recurringRepo.AddAsync(schedule);
-        var journalService = new JournalService(journalRepo, accountRepo);
+        var journalService = new JournalService(journalRepo, accountRepo, new InMemoryFiscalPeriodRepository());
         var billService = new BillService(billRepo, contactRepo, accountRepo, taxRepo, journalService);
         var invoiceService = new InvoiceService(new RecurringTestInvoiceRepository(), contactRepo, accountRepo, taxRepo, journalService);
         var processor = new RecurringTransactionProcessor(recurringRepo, invoiceService, billService, journalService);

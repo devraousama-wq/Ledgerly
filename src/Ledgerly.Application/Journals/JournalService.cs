@@ -1,6 +1,7 @@
 using Ledgerly.Application.Abstractions;
 using Ledgerly.Domain.Common;
 using Ledgerly.Domain.Entities;
+using Ledgerly.Domain.Enums;
 using Ledgerly.Domain.Exceptions;
 using Ledgerly.Domain.ValueObjects;
 
@@ -10,11 +11,16 @@ public sealed class JournalService
 {
     private readonly IJournalRepository _journalRepository;
     private readonly IAccountRepository _accountRepository;
+    private readonly IFiscalPeriodRepository _fiscalPeriodRepository;
 
-    public JournalService(IJournalRepository journalRepository, IAccountRepository accountRepository)
+    public JournalService(
+        IJournalRepository journalRepository,
+        IAccountRepository accountRepository,
+        IFiscalPeriodRepository fiscalPeriodRepository)
     {
         _journalRepository = journalRepository;
         _accountRepository = accountRepository;
+        _fiscalPeriodRepository = fiscalPeriodRepository;
     }
 
     public async Task<Result<JournalEntryDto>> CreateDraftAsync(
@@ -112,6 +118,16 @@ public sealed class JournalService
                 return Result<JournalEntryDto>.Failure("Journal entry not found.");
             }
 
+            var periodValidation = await EnsurePeriodOpenAsync(
+                organizationId,
+                entry.EntryDate,
+                cancellationToken);
+
+            if (periodValidation.IsFailure)
+            {
+                return Result<JournalEntryDto>.Failure(periodValidation.Error!);
+            }
+
             entry.Post();
 
             await _journalRepository.UpdateAsync(entry, cancellationToken);
@@ -140,6 +156,16 @@ public sealed class JournalService
             if (entry is null)
             {
                 return Result<JournalEntryDto>.Failure("Journal entry not found.");
+            }
+
+            var periodValidation = await EnsurePeriodOpenAsync(
+                organizationId,
+                entry.EntryDate,
+                cancellationToken);
+
+            if (periodValidation.IsFailure)
+            {
+                return Result<JournalEntryDto>.Failure(periodValidation.Error!);
             }
 
             var reversal = entry.CreateReversal();
@@ -176,6 +202,25 @@ public sealed class JournalService
         if (account.CurrencyCode != baseCurrency)
         {
             return Result.Failure("Account currency must match journal base currency.");
+        }
+
+        return Result.Success();
+    }
+
+    private async Task<Result> EnsurePeriodOpenAsync(
+        Guid organizationId,
+        DateOnly entryDate,
+        CancellationToken cancellationToken)
+    {
+        var period = await _fiscalPeriodRepository.GetByYearMonthAsync(
+            organizationId,
+            entryDate.Year,
+            entryDate.Month,
+            cancellationToken);
+
+        if (period?.Status == FiscalPeriodStatus.Closed)
+        {
+            return Result.Failure($"Fiscal period {entryDate:yyyy-MM} is closed.");
         }
 
         return Result.Success();

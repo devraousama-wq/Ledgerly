@@ -4,6 +4,7 @@ using Ledgerly.Application.Contacts;
 using Ledgerly.Application.Expenses;
 using Ledgerly.Application.Invoices;
 using Ledgerly.Application.Journals;
+using Ledgerly.Application.Periods;
 using Ledgerly.Application.Reconciliation;
 using Ledgerly.Application.Recurring;
 using Ledgerly.Application.Reporting;
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<ReconciliationReportService>();
         services.AddScoped<RecurringScheduleService>();
         services.AddScoped<RecurringTransactionProcessor>();
+        services.AddScoped<PeriodCloseService>();
         services.AddScoped<PostedJournalAggregator>();
         services.AddScoped<TrialBalanceReportService>();
         services.AddScoped<ProfitAndLossReportService>();
