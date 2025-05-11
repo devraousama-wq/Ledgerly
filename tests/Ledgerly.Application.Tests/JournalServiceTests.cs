@@ -158,7 +158,7 @@ public class JournalServiceTests
     [Fact]
     public async Task ReverseAsync_creates_posted_reversal_and_marks_original_reversed()
     {
-        var (journalService, accountService, journalRepository) = CreateServices();
+        var (journalService, accountService, _) = CreateServices();
         var cash = await CreateAccountAsync(accountService, "1000", "Cash");
         var revenue = await CreateAccountAsync(accountService, "4000", "Revenue", accountType: AccountType.Income);
 
@@ -187,8 +187,8 @@ public class JournalServiceTests
         Assert.Equal(JournalEntryStatus.Posted, result.Value!.Status);
         Assert.Equal(draft.Value.Id, result.Value.ReversalOfEntryId);
 
-        var original = await journalRepository.GetByIdAsync(OrganizationId, draft.Value.Id);
-        Assert.Equal(JournalEntryStatus.Reversed, original!.Status);
+        var original = await journalService.GetByIdAsync(OrganizationId, draft.Value.Id);
+        Assert.Equal(JournalEntryStatus.Reversed, original.Value!.Status);
     }
 
     [Fact]
@@ -209,16 +209,91 @@ public class JournalServiceTests
         Assert.Contains("posted", result.Error, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task PostAsync_fails_when_period_closed()
+    {
+        var (journalService, accountService, fiscalPeriodRepository) = CreateServices();
+        var cash = await CreateAccountAsync(accountService, "1000", "Cash");
+        var revenue = await CreateAccountAsync(accountService, "4000", "Revenue", accountType: AccountType.Income);
+
+        await fiscalPeriodRepository.AddAsync(new FiscalPeriod(OrganizationId, 2026, 2));
+
+        var closedPeriod = await fiscalPeriodRepository.GetByYearMonthAsync(OrganizationId, 2026, 2);
+        closedPeriod!.Close();
+        await fiscalPeriodRepository.UpdateAsync(closedPeriod);
+
+        var draft = await journalService.CreateDraftAsync(new CreateJournalRequest(
+            OrganizationId,
+            new DateOnly(2026, 2, 15),
+            null,
+            "Blocked post",
+            "USD"));
+
+        await journalService.AddLineAsync(
+            OrganizationId,
+            draft.Value!.Id,
+            new AddJournalLineRequest(cash.Value!.Id, 100m, 0m, null));
+
+        await journalService.AddLineAsync(
+            OrganizationId,
+            draft.Value.Id,
+            new AddJournalLineRequest(revenue.Value!.Id, 0m, 100m, null));
+
+        var result = await journalService.PostAsync(OrganizationId, draft.Value.Id);
+
+        Assert.True(result.IsFailure);
+        Assert.Contains("closed", result.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ReverseAsync_fails_when_period_closed()
+    {
+        var (journalService, accountService, fiscalPeriodRepository) = CreateServices();
+        var cash = await CreateAccountAsync(accountService, "1000", "Cash");
+        var revenue = await CreateAccountAsync(accountService, "4000", "Revenue", accountType: AccountType.Income);
+
+        var draft = await journalService.CreateDraftAsync(new CreateJournalRequest(
+            OrganizationId,
+            new DateOnly(2026, 3, 1),
+            "JE-300",
+            "Sale",
+            "USD"));
+
+        await journalService.AddLineAsync(
+            OrganizationId,
+            draft.Value!.Id,
+            new AddJournalLineRequest(cash.Value!.Id, 75m, 0m, null));
+
+        await journalService.AddLineAsync(
+            OrganizationId,
+            draft.Value.Id,
+            new AddJournalLineRequest(revenue.Value!.Id, 0m, 75m, null));
+
+        await journalService.PostAsync(OrganizationId, draft.Value.Id);
+
+        await fiscalPeriodRepository.AddAsync(new FiscalPeriod(OrganizationId, 2026, 3));
+
+        var closedPeriod = await fiscalPeriodRepository.GetByYearMonthAsync(OrganizationId, 2026, 3);
+        closedPeriod!.Close();
+        await fiscalPeriodRepository.UpdateAsync(closedPeriod);
+
+        var result = await journalService.ReverseAsync(OrganizationId, draft.Value.Id);
+
+        Assert.True(result.IsFailure);
+        Assert.Contains("closed", result.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static (
         JournalService JournalService,
         AccountService AccountService,
-        InMemoryJournalRepository JournalRepository) CreateServices()
+        InMemoryFiscalPeriodRepository FiscalPeriodRepository) CreateServices()
     {
         var accountRepository = new InMemoryAccountRepository();
         var journalRepository = new InMemoryJournalRepository();
+        var fiscalPeriodRepository = new InMemoryFiscalPeriodRepository();
         var accountService = new AccountService(accountRepository);
-        var journalService = new JournalService(journalRepository, accountRepository);
-        return (journalService, accountService, journalRepository);
+        var journalService = new JournalService(journalRepository, accountRepository, fiscalPeriodRepository);
+        return (journalService, accountService, fiscalPeriodRepository);
     }
 
     private static async Task<Result<AccountDto>> CreateAccountAsync(

@@ -195,7 +195,7 @@ public class BankReconciliationServiceTests
         InMemoryAccountRepository accounts,
         InMemoryJournalRepository journals,
         InMemoryBankStatementRepository statements) =>
-        new(statements, accounts, journals, new JournalService(journals, accounts));
+        new(statements, accounts, journals, new JournalService(journals, accounts, new InMemoryFiscalPeriodRepository()));
 
     private static async Task<Account> SeedBankAccountAsync(InMemoryAccountRepository accounts)
     {
