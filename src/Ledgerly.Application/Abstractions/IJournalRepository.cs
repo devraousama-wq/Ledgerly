@@ -20,6 +20,12 @@ public interface IJournalRepository
         DateOnly endDate,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>> ListPostedLinesAsync(
+        Guid organizationId,
+        DateOnly? startDate,
+        DateOnly endDate,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(JournalEntry entry, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(JournalEntry entry, CancellationToken cancellationToken = default);

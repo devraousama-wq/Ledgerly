@@ -59,6 +59,31 @@ public sealed class JournalRepository : IJournalRepository
             .ToList();
     }
 
+    public async Task<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>> ListPostedLinesAsync(
+        Guid organizationId,
+        DateOnly? startDate,
+        DateOnly endDate,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.JournalEntries
+            .Include(entry => entry.Lines)
+            .Where(entry =>
+                entry.OrganizationId == organizationId &&
+                entry.Status == Domain.Enums.JournalEntryStatus.Posted &&
+                entry.EntryDate <= endDate);
+
+        if (startDate.HasValue)
+        {
+            query = query.Where(entry => entry.EntryDate >= startDate.Value);
+        }
+
+        var entries = await query.ToListAsync(cancellationToken);
+
+        return entries
+            .SelectMany(entry => entry.Lines.Select(line => (entry, line)))
+            .ToList();
+    }
+
     public async Task AddAsync(JournalEntry entry, CancellationToken cancellationToken = default)
     {
         await _context.JournalEntries.AddAsync(entry, cancellationToken);
