@@ -266,6 +266,17 @@ sealed class RecurringTestJournalRepository : IJournalRepository
     public Task<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>> ListPostedLinesByAccountAsync(Guid organizationId, Guid accountId, DateOnly startDate, DateOnly endDate, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>>(_items.Where(x => x.OrganizationId == organizationId && x.Status == JournalEntryStatus.Posted && x.EntryDate >= startDate && x.EntryDate <= endDate).SelectMany(x => x.Lines.Where(l => l.AccountId == accountId).Select(l => (x, l))).ToList());
 
+    public Task<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>> ListPostedLinesAsync(Guid organizationId, DateOnly? startDate, DateOnly endDate, CancellationToken cancellationToken = default)
+    {
+        var query = _items.Where(x => x.OrganizationId == organizationId && x.Status == JournalEntryStatus.Posted && x.EntryDate <= endDate);
+        if (startDate.HasValue)
+        {
+            query = query.Where(x => x.EntryDate >= startDate.Value);
+        }
+
+        return Task.FromResult<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>>(query.SelectMany(x => x.Lines.Select(l => (x, l))).ToList());
+    }
+
     public Task AddAsync(JournalEntry entry, CancellationToken cancellationToken = default)
     {
         _items.Add(entry);

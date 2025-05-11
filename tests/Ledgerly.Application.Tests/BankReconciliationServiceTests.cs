@@ -315,6 +315,29 @@ public class BankReconciliationServiceTests
             return Task.FromResult<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>>(lines);
         }
 
+        public Task<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>> ListPostedLinesAsync(
+            Guid organizationId,
+            DateOnly? startDate,
+            DateOnly endDate,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _entries.Where(entry =>
+                entry.OrganizationId == organizationId &&
+                entry.Status == JournalEntryStatus.Posted &&
+                entry.EntryDate <= endDate);
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(entry => entry.EntryDate >= startDate.Value);
+            }
+
+            var lines = query
+                .SelectMany(entry => entry.Lines.Select(line => (entry, line)))
+                .ToList();
+
+            return Task.FromResult<IReadOnlyList<(JournalEntry Entry, JournalLine Line)>>(lines);
+        }
+
         public Task AddAsync(JournalEntry entry, CancellationToken cancellationToken = default)
         {
             _entries.Add(entry);
